@@ -1,7 +1,12 @@
-task :default => :local
+task :default => [ :local, :gitcommit ]
 
 task :gitcommit do
   sh "git add -A"
+  `git status`.lines.each do |line|
+    if line.index "Your branch is up-to-date"
+      next
+    end
+  end
   sh "git commit -m auto"
   sh "git push"
 end
