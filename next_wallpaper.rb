@@ -49,7 +49,7 @@ def try_writing_image(b, max_len)
       puts "Image written to #{image_path}"
     end
     return image_path
-  rescue e
+  rescue Exception => e
     puts "Error try writing image: #{e}"
     return nil
   end
@@ -67,10 +67,16 @@ def download_image
 
     max_len = expand_gallery b
 
-    while true
+    retry_times = 0
+    while retry_times < 5
       if image_path = try_writing_image(b, max_len)
         return image_path
       end
+      retry_times += 1
+    end
+
+    if not image_path
+      raise "Cannot download image"
     end
   ensure
     b.close
