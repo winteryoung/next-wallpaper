@@ -50,7 +50,7 @@ def try_writing_image(b, max_len)
     end
     return image_path
   rescue Exception => e
-    puts "Error try writing image: #{e}"
+    puts exception.backtrace
     return nil
   end
 end
@@ -89,12 +89,17 @@ module User32
   ffi_lib 'user32'
   ffi_convention :stdcall
 
+  # BOOL SystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni)
   attach_function :SystemParametersInfoA, [ :int, :int, :pointer, :int ], :int
 end
 
+SPI_SETDESKWALLPAPER = 0x0014
+SPIF_UPDATEINIFILE = 0x01
+SPIF_SENDWININICHANGE = 0x02
 def set_wallpaper(image_path)
   p_image = FFI::MemoryPointer.from_string(image_path)
-  if not User32.SystemParametersInfoA 0x0014, 0, p_image, 0x03
+  win_ini = SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE
+  if not User32.SystemParametersInfoA SPI_SETDESKWALLPAPER, 0, p_image, win_ini
     raise "Setting wallpaper failed"
   end
   puts "Done setting wallpaper"
