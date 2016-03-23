@@ -1,20 +1,11 @@
+require 'winter_rakeutils'
+
+include WinterRakeUtils
+
 task :default => [ :local, :gitcommit ]
 
-def working_dir_clean
-  `git status`.lines.each do |line|
-    if line.index "Changes to be committed"
-      return false
-    end
-  end
-  return true
-end
-
 task :gitcommit do
-  sh "git add -A"
-  if not working_dir_clean
-    sh "git commit -m auto"
-    sh "git push"
-  end
+  git_commit_push
 end
 
 task :local do

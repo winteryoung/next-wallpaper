@@ -4,7 +4,6 @@ require 'ffi'
 require 'openssl'
 require 'fastimage'
 
-OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
@@ -39,6 +38,7 @@ def try_writing_image(b, max_len)
 
     width, height = FastImage.size url
     if width != SCREEN_WIDTH or height != SCREEN_HEIGHT
+      puts "Incorrect image size"
       return nil
     end
 
@@ -50,6 +50,7 @@ def try_writing_image(b, max_len)
     end
     return image_path
   rescue Exception => e
+    puts e
     puts exception.backtrace
     return nil
   end
@@ -91,15 +92,16 @@ module User32
 
   # BOOL SystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni)
   attach_function :SystemParametersInfoA, [ :int, :int, :pointer, :int ], :int
+
+  SPI_SETDESKWALLPAPER = 0x0014
+  SPIF_UPDATEINIFILE = 0x01
+  SPIF_SENDWININICHANGE = 0x02
 end
 
-SPI_SETDESKWALLPAPER = 0x0014
-SPIF_UPDATEINIFILE = 0x01
-SPIF_SENDWININICHANGE = 0x02
 def set_wallpaper(image_path)
   p_image = FFI::MemoryPointer.from_string(image_path)
-  win_ini = SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE
-  if not User32.SystemParametersInfoA SPI_SETDESKWALLPAPER, 0, p_image, win_ini
+  win_ini = User32::SPIF_UPDATEINIFILE | User32::SPIF_SENDWININICHANGE
+  if not User32.SystemParametersInfoA User32::SPI_SETDESKWALLPAPER, 0, p_image, win_ini
     raise "Setting wallpaper failed"
   end
   puts "Done setting wallpaper"
