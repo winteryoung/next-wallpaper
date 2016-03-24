@@ -35,3 +35,4 @@ pom.xml.versionsBackup
 
 # Common useless files
 *.lock
+*.log

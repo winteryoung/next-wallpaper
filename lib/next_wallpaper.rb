@@ -12,15 +12,17 @@ class NextWallpaper
   end
 
   def invoke
-    image_path = nil
-    begin
-      image_path = download_image
-      set_wallpaper image_path
-    ensure
-      if image_path
-        File.delete image_path
-      end
+    temp_file = download_image
+    set_wallpaper temp_file.path
+  end
+
+  def set_wallpaper image_path
+    p_image = FFI::MemoryPointer.from_string image_path
+    win_ini = User32::SPIF_UPDATEINIFILE | User32::SPIF_SENDWININICHANGE
+    if not User32.SystemParametersInfoA User32::SPI_SETDESKWALLPAPER, 0, p_image, win_ini
+      raise "Setting wallpaper failed"
     end
+    puts "Done setting wallpaper"
   end
 
   private
@@ -57,19 +59,21 @@ class NextWallpaper
 
       width, height = FastImage.size url
       if width != @width or height != @height
+        puts "Incorrect image size: #{url}"
         return nil
       end
 
       ext = url[url.rindex('.')..-1]
-      image_path = Tempfile.new "next_wallpaper_wallpaper#{ext}"
+      temp_file = Tempfile.new ["next_wallpaper", ext]
+      temp_file.binmode
+      temp_file.write open(url).read
+      temp_file.close
+
+      return temp_file
     rescue Exception => e
       puts "Error try writing image: #{e}"
+      puts e.backtrace
       return nil
-    end
-
-    File.open(image_path, 'wb') do |f|
-      f.write open(url).read
-      puts "Image written to #{image_path}"
     end
   end
 
@@ -86,16 +90,15 @@ class NextWallpaper
       max_len = expand_gallery b
 
       retry_times = 0
+      temp_file = nil
       while retry_times < 5
-        if image_path = try_writing_image(b, max_len)
-          return image_path
+        if temp_file = try_writing_image(b, max_len)
+          return temp_file
         end
         retry_times += 1
       end
 
-      if not image_path
-        raise "Cannot download image"
-      end
+      raise "Max retry exceeded"
     ensure
       b.close
     end
@@ -107,14 +110,10 @@ class NextWallpaper
     ffi_lib 'user32'
     ffi_convention :stdcall
 
-    attach_function :SystemParametersInfoA, [ :int, :int, :pointer, :int ], :int
-  end
+    SPI_SETDESKWALLPAPER = 0x0014
+    SPIF_UPDATEINIFILE = 0x01
+    SPIF_SENDWININICHANGE = 0x02
 
-  def set_wallpaper(image_path)
-    p_image = FFI::MemoryPointer.from_string(image_path)
-    if not User32.SystemParametersInfoA 0x0014, 0, p_image, 0x03
-      raise "Setting wallpaper failed"
-    end
-    puts "Done setting wallpaper"
+    attach_function :SystemParametersInfoA, [ :int, :int, :pointer, :int ], :int
   end
 end
