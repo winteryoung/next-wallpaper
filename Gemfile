@@ -1,5 +1,3 @@
-source "https://rubygems.org"
+source "https://ruby.taobao.org"
 
-gem 'fastimage'
-gem 'watir-webdriver'
-gem 'ffi'
+gemspec

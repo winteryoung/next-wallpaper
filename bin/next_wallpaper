@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+require 'next_wallpaper'
+require 'optparse'
+
+option_parser = OptionParser.new do |opt|
+  opt.banner = <<-EOF
+  Usage: next_wallpaper <OPTIONS> WIDTH HEIGHT
+
+  Example:
+
+  next_wallpaper 1920 1080
+  EOF
+
+  opt.separator ""
+  opt.separator "Options:"
+
+  opt.on_tail('-h', '--help', 'Print this help.') do |o|
+    puts opt
+    exit
+  end
+end.parse! ARGV
+
+width = ARGV[0].to_i
+if width == 0
+  width = 1920
+end
+
+height = ARGV[1].to_i
+if height == 0
+  height = 1080
+end
+
+next_wallpaper = NextWallpaper.new width, height
+next_wallpaper.invoke

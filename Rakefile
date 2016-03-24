@@ -1,24 +1,42 @@
+require 'rake/clean'
+require "rubygems"
+require "winter_rakeutils"
+
+include WinterRakeUtils
+
+app_name = "next_wallpaper"
+
+gem_spec = Gem::Specification::load("#{app_name}.gemspec")
+ver = gem_spec.version
+gem_source_files = FileList.new "lib/*", "bin/*", "#{app_name}.gemspec"
+gem_file = FileList.new "target/#{app_name}-#{ver}.gem"
+
 task :default => [ :local, :gitcommit ]
 
-def working_dir_clean
-  `git status`.lines.each do |line|
-    if line.index "Changes to be committed"
-      return false
-    end
-  end
-  return true
+CLOBBER.include "target"
+directory "target"
+
+rule /target\/.+?\.gem/ => ['target', *gem_source_files] do |t|
+  sh "gem build #{app_name}.gemspec"
+  mv "#{app_name}-#{ver}.gem", "target/"
 end
 
 task :gitcommit do
-  sh "git add -A"
-  if not working_dir_clean
-    sh "git commit -m auto"
-    sh "git push"
+  git_commit_push
+end
+
+task :build => ['target', "target/#{app_name}-#{ver}.gem"]
+
+task :local => [ :clobber, :build, 'target' ] do
+  sh "gem uninstall -ax #{app_name}"
+  within_dir "target" do
+    sh "gem install #{app_name}-#{ver}.gem"
   end
 end
 
-task :local do
-  target_dir = 'D:\DocSync\Bin'
-  cp "next_wallpaper.bat", target_dir
-  cp "next_wallpaper.rb", target_dir
+task :test do
+  tests = FileList.new "test/**/*_test.rb"
+  tests.each do |test|
+    system "ruby #{test}"
+  end
 end
