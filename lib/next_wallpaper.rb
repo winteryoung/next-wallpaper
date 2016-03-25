@@ -25,6 +25,22 @@ class NextWallpaper
     puts "Done setting wallpaper"
   end
 
+  def extract_domain_part url
+    m = /^(https?:\/\/.+?\/).*/.match url
+    if m
+      return m.captures[0]
+    end
+    return nil
+  end
+
+  def read_image_url url
+    domain = extract_domain_part url
+    unless domain
+      raise "Cannot extract domain for #{url}"
+    end
+    open(url, "Referer" => domain).read
+  end
+
   def try_image_url url, recur_level = 0
     if recur_level > 5
       puts "Exceeds max recursion level for trying image url"
@@ -32,7 +48,7 @@ class NextWallpaper
     end
 
     temp_file = Tempfile.new "next_wallpaper_temp_image"
-    temp_file.write open(url).read
+    temp_file.write read_image_url(url)
     temp_file.close
 
     puts "Try image: #{url}"
@@ -66,8 +82,6 @@ class NextWallpaper
     switches = [ "--proxy-server=#{proxy}", "--start-maximized" ]
     return Watir::Browser.new :chrome, :switches => switches
   end
-
-  private
 
   def expand_gallery(browser)
     max_len = 0
@@ -106,7 +120,7 @@ class NextWallpaper
       ext = url[url.rindex('.')..-1]
       temp_file = Tempfile.new ["next_wallpaper", ext]
       temp_file.binmode
-      temp_file.write open(url).read
+      temp_file.write read_image_url(url)
       temp_file.close
 
       return temp_file
