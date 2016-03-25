@@ -25,6 +25,48 @@ class NextWallpaper
     puts "Done setting wallpaper"
   end
 
+  def try_image_url url, recur_level = 0
+    if recur_level > 5
+      puts "Exceeds max recursion level for trying image url"
+      return nil
+    end
+
+    temp_file = Tempfile.new "next_wallpaper_temp_image"
+    temp_file.write open(url).read
+    temp_file.close
+
+    puts "Try image: #{url}"
+    width, height = FastImage.size temp_file.path
+    if width == nil
+      puts "HTML backend for image url"
+      b = new_browser
+      begin
+        b.goto url
+        img = b.element :css, "img"
+        img.wait_until_present
+        img_src = img.attribute_value("src")
+        if img_src == url
+          puts "Same url, stop trying image"
+          return nil
+        end
+      ensure
+        b.close
+      end
+      return try_image_url img.attribute_value("src"), recur_level + 1
+    elsif width != @width or height != @height
+      puts "Incorrect image size: [#{width}, #{height}]"
+      return nil
+    else
+      return url
+    end
+  end
+
+  def new_browser
+    proxy = '127.0.0.1:7777'
+    switches = [ "--proxy-server=#{proxy}", "--start-maximized" ]
+    return Watir::Browser.new :chrome, :switches => switches
+  end
+
   private
 
   def expand_gallery(browser)
@@ -55,11 +97,9 @@ class NextWallpaper
       view_image_btn = b.element :css, "#irc_cc > div:nth-child(3) > div.irc_b.i8152 > div._cjj > div.irc_butc > table._Ccb.irc_but_r > tbody > tr > td:nth-child(2) > a"
       view_image_btn.wait_until_present
       url = view_image_btn.attribute_value "href"
-      puts "Image URL: #{url}"
+      url = try_image_url url
 
-      width, height = FastImage.size url
-      if width != @width or height != @height
-        puts "Incorrect image size: #{url}"
+      if url == nil
         return nil
       end
 
@@ -78,9 +118,7 @@ class NextWallpaper
   end
 
   def download_image
-    proxy = '127.0.0.1:7777'
-    switches = [ "--proxy-server=#{proxy}", "--start-maximized" ]
-    b = Watir::Browser.new :chrome, :switches => switches
+    b = new_browser
     begin
       b.goto "http://image.google.com"
       input = b.text_field :css, "#lst-ib"
@@ -88,6 +126,7 @@ class NextWallpaper
       input.send_keys :enter
 
       max_len = expand_gallery b
+      puts "Max image: #{max_len}"
 
       retry_times = 0
       temp_file = nil
