@@ -15,5 +15,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "ffi", ["~> 1.9"]
   s.add_runtime_dependency "watir-webdriver", ["~> 0.9"]
   s.add_runtime_dependency "fastimage", ["~> 1.9"]
-  s.add_development_dependency "winter_rakeutils", ["~> 0.1"]
+  s.add_development_dependency "winter_rakeutils", ["~> 0.3", ">= 0.3.1"]
 end
