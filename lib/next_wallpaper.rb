@@ -106,9 +106,12 @@ class NextWallpaper
     image_path = nil
     begin
       img = b.element :css, "#rg_s > div:nth-child(#{image_index}) > a > img"
+      puts "read image #{image_index}"
+      img.wait_until_present
       img.click
+      puts "after click img"
 
-      view_image_btn = b.element :css, "#irc_cc > div:nth-child(3) > div.irc_b.i8152 > div._cjj > div.irc_butc > table._Ccb.irc_but_r > tbody > tr > td:nth-child(2) > a"
+      view_image_btn = b.element :css, "#irc_cc > div:nth-child(2) > div.irc_b.i8152 > div._cjj > div.irc_butc > table._Ccb.irc_but_r > tbody > tr > td:nth-child(2) > a"
       view_image_btn.wait_until_present
       url = view_image_btn.attribute_value "href"
       url = try_image_url url
