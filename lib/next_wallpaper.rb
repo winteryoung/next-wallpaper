@@ -41,6 +41,16 @@ class NextWallpaper
     open(url, "Referer" => domain).read
   end
 
+  def image_size path
+    for i in 0...5
+      width, height = FastImage.size path
+      if width
+        return width, height
+      end
+    end
+    return nil
+  end
+
   def try_image_url url, recur_level = 0
     if recur_level > 5
       puts "Exceeds max recursion level for trying image url"
@@ -52,7 +62,7 @@ class NextWallpaper
     temp_file.close
 
     puts "Try image: #{url}"
-    width, height = FastImage.size temp_file.path
+    width, height = image_size temp_file.path
     if width == nil
       puts "HTML backend for image url"
       b = new_browser
