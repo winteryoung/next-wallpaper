@@ -75,6 +75,7 @@ class NextWallpaper
           puts "Same url, stop trying image"
           return nil
         end
+        return img_src
       ensure
         b.close
       end
