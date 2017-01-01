@@ -64,22 +64,8 @@ class NextWallpaper
     puts "Try image: #{url}"
     width, height = image_size temp_file.path
     if width == nil
-      puts "HTML backend for image url"
-      b = new_browser
-      begin
-        b.goto url
-        img = b.element :css, "img"
-        img.wait_until_present
-        img_src = img.attribute_value("src")
-        if img_src == url
-          puts "Same url, stop trying image"
-          return nil
-        end
-        return img_src
-      ensure
-        b.close
-      end
-      return try_image_url img.attribute_value("src"), recur_level + 1
+      puts "Cannot get width of image"
+      return nil
     elsif width != @width or height != @height
       puts "Incorrect image size: [#{width}, #{height}]"
       return nil
