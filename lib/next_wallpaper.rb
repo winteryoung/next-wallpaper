@@ -106,9 +106,10 @@ class NextWallpaper
       img.wait_until_present
       img.click
 
-      view_image_btn = b.element :css, "#irc_cc > div:nth-child(2) > div.irc_b.i8152 > div._cjj > div.irc_butc > table._Ccb.irc_but_r > tbody > tr > td:nth-child(2) > a"
+      view_image_btn = b.element :css, "#irc_cc > div:nth-child(2) > div.irc_b.i8152.irc_mmc > div.i30053 > div > div.irc_butc > table._Ccb.irc_but_r > tbody > tr > td:nth-child(2) > a"
       view_image_btn.wait_until_present
       url = view_image_btn.attribute_value "href"
+      puts url
       url = try_image_url url
 
       if url == nil
